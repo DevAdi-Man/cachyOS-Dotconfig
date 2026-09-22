@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# omarchy-theme-bg-set — wallpaper setter using swaybg
+# Usage: omarchy-theme-bg-set /path/to/wallpaper.jpg
+
+WALLPAPER="${1:-}"
+[ -z "$WALLPAPER" ] && { echo "Usage: omarchy-theme-bg-set <wallpaper_path>" >&2; exit 1; }
+[ -f "$WALLPAPER" ] || { echo "File not found: $WALLPAPER" >&2; exit 1; }
+WALLPAPER=$(realpath "$WALLPAPER")
+
+# Update omarchy current background symlink
+mkdir -p "$HOME/.config/omarchy/current"
+ln -sf "$WALLPAPER" "$HOME/.config/omarchy/current/background"
+
+# Kill old swaybg and set new wallpaper
+pkill -x swaybg 2>/dev/null || true
+sleep 0.2
+swaybg -m fill -i "$WALLPAPER" &
+disown
+
+echo "✓ $(basename "$WALLPAPER")"

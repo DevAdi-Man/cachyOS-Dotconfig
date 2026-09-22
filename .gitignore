@@ -1,0 +1,27 @@
+# Git ignore rules for Dotfiles Repository
+
+# OS & Editor artifacts
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Python caches and environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Runtime and temp files
+*.log
+*.tmp
+*.bak
+.sentinel
+copyq_tab_*.dat
+copyq.lock
+.copyq_s
+copyq.pub

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# omarchy-launch-floating-terminal-with-presentation
+# Launches a floating terminal running the given command
+# Usage: omarchy-launch-floating-terminal-with-presentation 'btop'
+
+CMD="${*:-bash}"
+
+# Use kitty with a special class so Hyprland can float it via windowrules
+exec kitty --class floating-terminal --title "floating-terminal" -- bash -c "LANG=en_IN.UTF-8 LC_ALL=en_IN.UTF-8 $CMD"

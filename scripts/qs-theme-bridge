@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+# qs-theme-bridge — generates ~/.config/omarchy/current/theme/colors.toml
+# from a wallpaper using matugen, so Quickshell Rise picks up your colors.
+# Usage: qs-theme-bridge /path/to/wallpaper.jpg
+
+import sys, os, json, subprocess
+
+OMARCHY_THEME = os.path.expanduser("~/.config/omarchy/current/theme")
+COLORS_FILE   = os.path.join(OMARCHY_THEME, "colors.toml")
+BACKGROUNDS   = os.path.join(OMARCHY_THEME, "backgrounds")
+BACKGROUND    = os.path.expanduser("~/.config/omarchy/current/background")
+
+def c(colors_data, key, fallback="#1a1111"):
+    return colors_data.get(key, {}).get("default", {}).get("color", fallback)
+
+def generate(wallpaper):
+    result = subprocess.run(
+        ["matugen", "--prefer", "saturation", "--json", "hex", "image", wallpaper],
+        capture_output=True, text=True
+    )
+    raw = result.stdout.strip()
+    if not raw:
+        print(f"matugen produced no output for: {wallpaper}", file=sys.stderr)
+        sys.exit(1)
+
+    # Find end of the single root JSON object
+    depth = 0
+    for i, ch in enumerate(raw):
+        if ch == '{': depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+
+    d = json.loads(raw[:end])
+    colors_data = d["colors"]
+
+    toml = f'''background = "{c(colors_data, 'surface', '#1a1111')}"
+foreground = "{c(colors_data, 'on_surface', '#e6d4d0')}"
+color1 = "{c(colors_data, 'error', '#ffb4ab')}"
+color2 = "{c(colors_data, 'tertiary', '#e3c28c')}"
+color3 = "{c(colors_data, 'tertiary_container', '#ffdea9')}"
+color4 = "{c(colors_data, 'primary', '#ffb3af')}"
+color5 = "{c(colors_data, 'secondary', '#e7bdba')}"
+color6 = "{c(colors_data, 'primary_fixed_dim', '#ffb3af')}"
+color7 = "{c(colors_data, 'on_surface_variant', '#a08c8b')}"
+color8 = "{c(colors_data, 'surface_container_high', '#322827')}"
+accent  = "{c(colors_data, 'primary', '#ffb3af')}"
+'''
+    os.makedirs(OMARCHY_THEME, exist_ok=True)
+    os.makedirs(BACKGROUNDS, exist_ok=True)
+    with open(COLORS_FILE, "w") as f:
+        f.write(toml)
+
+    # Update background symlink
+    try:
+        if os.path.lexists(BACKGROUND):
+            os.remove(BACKGROUND)
+        os.symlink(os.path.abspath(wallpaper), BACKGROUND)
+    except Exception as e:
+        print(f"Warning: could not update background symlink: {e}", file=sys.stderr)
+
+    print(f"✓ Colors written from: {wallpaper}")
+    print(toml)
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        # Default: use current hyprpaper wallpaper
+        try:
+            conf = open(os.path.expanduser("~/.config/hypr/hyprpaper.conf")).read()
+            import re
+            m = re.search(r"^wallpaper\s*=\s*[^,]+,(.+)", conf, re.MULTILINE)
+            if m:
+                wallpaper = m.group(1).strip()
+            else:
+                print("Usage: qs-theme-bridge <wallpaper_path>", file=sys.stderr)
+                sys.exit(1)
+        except Exception:
+            print("Usage: qs-theme-bridge <wallpaper_path>", file=sys.stderr)
+            sys.exit(1)
+    else:
+        wallpaper = sys.argv[1]
+
+    generate(wallpaper)

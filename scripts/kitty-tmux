@@ -1,0 +1,2 @@
+#!/bin/bash
+kitty tmux new-session -s "$(date +%s)"

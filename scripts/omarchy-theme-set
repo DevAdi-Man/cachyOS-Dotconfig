@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# omarchy-theme-set — sets theme from ~/.local/share/omarchy/themes/<name>
+# Usage: omarchy-theme-set <theme-name>
+
+THEME_NAME="${1:-}"
+[ -z "$THEME_NAME" ] && { echo "Usage: omarchy-theme-set <theme-name>" >&2; exit 1; }
+
+THEME_DIR="$HOME/.local/share/omarchy/themes/$THEME_NAME"
+[ -d "$THEME_DIR" ] || { echo "Theme not found: $THEME_NAME" >&2; exit 1; }
+
+# Find wallpaper inside theme dir
+WALLPAPER=""
+for f in "$THEME_DIR"/backgrounds/*.jpg \
+          "$THEME_DIR"/backgrounds/*.jpeg \
+          "$THEME_DIR"/backgrounds/*.png \
+          "$THEME_DIR"/backgrounds/*.webp; do
+    [ -f "$f" ] && { WALLPAPER=$(realpath "$f"); break; }
+done
+
+[ -z "$WALLPAPER" ] && { echo "No wallpaper in theme: $THEME_NAME" >&2; exit 1; }
+
+# Update theme name
+mkdir -p "$HOME/.config/omarchy/current"
+echo "$THEME_NAME" > "$HOME/.config/omarchy/current/theme.name"
+
+# Apply wallpaper
+omarchy-theme-bg-set "$WALLPAPER"
+
+# Generate colors.toml for quickshell from wallpaper
+qs-theme-bridge "$WALLPAPER"
+
+# Run theme-set hooks
+HOOK_DIR="$HOME/.config/omarchy/hooks/theme-set.d"
+if [ -d "$HOOK_DIR" ]; then
+    for hook in "$HOOK_DIR"/*.sh; do
+        [ -x "$hook" ] && bash "$hook" 2>/dev/null || true
+    done
+fi
