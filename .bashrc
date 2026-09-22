@@ -35,3 +35,8 @@ alias emulator='QT_QPA_PLATFORM=xcb $HOME/Android/Sdk/emulator/emulator -avd Pix
 
 # Added by Antigravity CLI installer
 export PATH="$HOME/.local/bin:$PATH"
+
+# Enable zoxide for cd
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init bash --cmd cd)"
+fi

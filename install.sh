@@ -177,11 +177,10 @@ fi
 install_packages() {
     head "1. Checking System Packages"
 
-    local aur_helper=""
-    if command -v paru &>/dev/null; then
-        aur_helper="paru"
-    elif command -v yay &>/dev/null; then
-        aur_helper="yay"
+    local aur_helper="paru"
+    if ! command -v paru &>/dev/null; then
+        info "paru not found. Installing paru via pacman..."
+        sudo pacman -S --needed --noconfirm paru || warn "Failed to install paru, package installation might fail."
     fi
 
     local core_pkgs=(
