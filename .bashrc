@@ -30,13 +30,18 @@ export LANG=en_IN.UTF-8
 export LC_ALL=en_IN.UTF-8
 
 # Android Emulator
-alias emulator='QT_QPA_PLATFORM=xcb $HOME/Android/Sdk/emulator/emulator -avd Pixel_8 -gpu host -scale 0.4 -no-boot-anim -no-skin'
+alias emulator='QT_QPA_PLATFORM=xcb /home/devadi/Android/Sdk/emulator/emulator -avd Pixel_8 -gpu host -scale 0.4 -no-boot-anim -no-skin'
 
 
 # Added by Antigravity CLI installer
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="/home/devadi/.local/bin:$PATH"
 
 # Enable zoxide for cd
 if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init bash --cmd cd)"
 fi
+
+# SDDM Astronaut Theme Aliases
+alias sddm-edit="sudo nvim /usr/share/sddm/themes/sddm-astronaut-theme/Themes/japanese_aesthetic.conf"
+alias sddm-preview="sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/sddm-astronaut-theme/"
+
