@@ -10,7 +10,9 @@ local app_binds = {
    { "M",      MENU }, { "B", BROWSER },
    { "E",      FILE_MANAGER },
    { "V",      "copyq toggle" },
-   { "L",      "hyprlock --immediate-render --no-fade-in" },
+   -- # [TEMP DISABLED by lockscreen setup - uncomment to restore old lock]
+   -- { "L",      "hyprlock --immediate-render --no-fade-in" },
+   { "L",      "QML2_IMPORT_PATH=~/.config/quickshell/lockscreen quickshell -p ~/.config/quickshell/lockscreen/shell.qml" },
    { "escape", "killall wlogout || wlogout" },
    { "I",      "networkmanager_dmenu" },
    { "Z",      "zeditor" },
