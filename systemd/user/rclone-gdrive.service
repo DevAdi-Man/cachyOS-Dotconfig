@@ -1,0 +1,21 @@
+[Unit]
+Description=RClone Mount of Google Drive
+AssertPathIsDirectory=%h/linuxfromLaptop
+After=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/rclone mount gdrive:linuxfromLaptop/linuxfromLaptop %h/linuxfromLaptop \
+  --vfs-cache-mode full \
+  --vfs-cache-max-age 720h \
+  --vfs-cache-max-size 2G \
+  --dir-cache-time 72h \
+  --vfs-read-chunk-size 32M \
+  --vfs-read-chunk-size-limit off \
+  --log-level INFO
+ExecStop=/usr/bin/fusermount -uz %h/linuxfromLaptop
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

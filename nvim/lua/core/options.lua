@@ -58,3 +58,10 @@ vim.api.nvim_create_autocmd("FileType", {
     })
   end,
 })
+
+-- Code Folding (Treesitter based: Functions & code blocks collapse/hide karna)
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+vim.opt.foldlevel = 99 -- Files open hone par saare folds khule rahenge
+vim.opt.foldlevelstart = 99
+vim.opt.foldenable = true

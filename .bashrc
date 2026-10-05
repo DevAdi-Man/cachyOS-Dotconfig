@@ -32,7 +32,6 @@ export LC_ALL=en_IN.UTF-8
 # Android Emulator
 alias emulator='QT_QPA_PLATFORM=xcb /home/devadi/Android/Sdk/emulator/emulator -avd Pixel_8 -gpu host -scale 0.4 -no-boot-anim -no-skin'
 
-
 # Added by Antigravity CLI installer
 export PATH="/home/devadi/.local/bin:$PATH"
 
@@ -45,3 +44,38 @@ fi
 alias sddm-edit="sudo nvim /usr/share/sddm/themes/sddm-astronaut-theme/Themes/japanese_aesthetic.conf"
 alias sddm-preview="sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/sddm-astronaut-theme/"
 
+alias openpdf='zen-browser'
+alias y='yazi'
+alias pod='podman-compose'
+
+# ADB Wifi Connect Function
+function adb_wifi() {
+    # Start server to prevent 'protocol fault' bug during pairing
+    adb start-server
+    echo "Select Device to connect:"
+    echo "1) 192.168.31.45 (New)"
+    echo "2) 192.168.31.39 (Old)"
+    read -p "Enter choice (1 or 2) [Default: 1]: " ip_choice
+    
+    if [ "$ip_choice" == "2" ]; then
+        IP="192.168.31.39"
+    else
+        IP="192.168.31.45"
+    fi
+    
+    echo "Device IP is set to: $IP"
+    read -p "Enter Pairing Port (from 'Pair device with pairing code' screen): " PAIR_PORT
+    read -p "Enter Pairing Code: " PAIR_CODE
+    
+    echo "Pairing with $IP:$PAIR_PORT..."
+    adb pair $IP:$PAIR_PORT $PAIR_CODE
+    
+    echo "----------------------------------------"
+    read -p "Enter Connect Port (from main Wireless Debugging screen): " CONNECT_PORT
+    
+    echo "Connecting to $IP:$CONNECT_PORT..."
+    adb connect $IP:$CONNECT_PORT
+    
+    echo "Done! Attached devices:"
+    adb devices
+}

@@ -460,15 +460,18 @@
 
 ---
 
-### 🪟 Folds
+### 🪟 Folds (Functions/Blocks Hide & Show)
 
-| Key  | Action          | Kya karta hai           |
-| ---- | --------------- | ----------------------- |
-| `za` | Toggle fold     | Fold kholo ya band karo |
-| `zc` | Close fold      | Fold band karo          |
-| `zo` | Open fold       | Fold kholo              |
-| `zR` | Open all folds  | Saare folds kholo       |
-| `zM` | Close all folds | Saare folds band karo   |
+| Key           | Action          | Kya karta hai                                              |
+| ------------- | --------------- | ---------------------------------------------------------- |
+| `<leader>z`   | Toggle fold     | Cursor wale function/block ki lines hide ya show karo (za) |
+| `za`          | Toggle fold     | Standard vim: fold kholo ya band karo                      |
+| `<leader>zr`  | Open all folds  | Buffer ke saare folds kholo                                |
+| `<leader>zm`  | Close all folds | Buffer ke saare folds band karo                            |
+| `<leader>ti`  | Toggle indent   | Indent lines (`\|` guides) on/off toggle karo              |
+| `<leader>nl`  | Toggle numbers  | Line numbers (1, 2, 3...) on/off toggle karo              |
+| `zR`          | Open all folds  | Saare folds kholo                                          |
+| `zM`          | Close all folds | Saare folds band karo                                      |
 
 ---
 

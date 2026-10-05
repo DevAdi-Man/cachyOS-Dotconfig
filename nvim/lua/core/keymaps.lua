@@ -137,3 +137,17 @@ vim.keymap.set('n', '<leader>ev', function()
     reveal = true,
   }
 end, { desc = 'Open Neovim Config' })
+
+-- Code Folding: Function/code block toggle (lines hide/show karna)
+vim.keymap.set('n', '<leader>z', 'za', { desc = 'Toggle fold (hide/show function lines)' })
+vim.keymap.set('n', '<leader>zr', 'zR', { desc = 'Open all folds in buffer' })
+vim.keymap.set('n', '<leader>zm', 'zM', { desc = 'Close all folds in buffer' })
+
+-- Toggle indent guide lines (| lines on/off) via indent-blankline
+vim.keymap.set('n', '<leader>ti', '<cmd>IBLToggle<CR>', { desc = 'Toggle indent lines' })
+
+-- Toggle line numbers
+vim.keymap.set('n', '<leader>nl', function()
+  vim.wo.number = not vim.wo.number
+  vim.wo.relativenumber = not vim.wo.relativenumber
+end, { desc = 'Toggle line numbers' })
