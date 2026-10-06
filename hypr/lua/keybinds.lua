@@ -89,6 +89,10 @@ hl.bind(mod .. " + ALT + p",   hl.dsp.exec_cmd("bash -c 'grim /tmp/shot.png && s
 hl.bind(mod .. " + SHIFT + p", hl.dsp.exec_cmd("bash -c 'hyprshot -m window -o /tmp -f shot.png && swappy -f /tmp/shot.png'"))
 hl.bind(mod .. " + CTRL + p",  hl.dsp.exec_cmd('bash -c \'grim -g "$(slurp)" - | wl-copy && notify-send "Screenshot" "Clipboard mein copy ho gaya!"\''))
 
+-- ─── Gyotaku (OCR Screenshot Search) ─────────────────────────────────────────
+-- Super+Space     : open/toggle gyotaku screenshot search window
+hl.bind(mod .. " + space", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/gyotaku-toggle"))
+
 -- ─── Screen Recording ────────────────────────────────────────────────────────
 local rec_stop  = 'killall -q wf-recorder && notify-send "Recording stopped" || '
 local rec_file  = '-f ~/Videos/Screencasts/recording_$(date +%Y%m%d_%H%M%S).mp4'

@@ -56,26 +56,29 @@ function adb_wifi() {
     echo "1) 192.168.31.45 (New)"
     echo "2) 192.168.31.39 (Old)"
     read -p "Enter choice (1 or 2) [Default: 1]: " ip_choice
-    
+
     if [ "$ip_choice" == "2" ]; then
         IP="192.168.31.39"
     else
         IP="192.168.31.45"
     fi
-    
+
     echo "Device IP is set to: $IP"
     read -p "Enter Pairing Port (from 'Pair device with pairing code' screen): " PAIR_PORT
     read -p "Enter Pairing Code: " PAIR_CODE
-    
+
     echo "Pairing with $IP:$PAIR_PORT..."
     adb pair $IP:$PAIR_PORT $PAIR_CODE
-    
+
     echo "----------------------------------------"
     read -p "Enter Connect Port (from main Wireless Debugging screen): " CONNECT_PORT
-    
+
     echo "Connecting to $IP:$CONNECT_PORT..."
     adb connect $IP:$CONNECT_PORT
-    
+
     echo "Done! Attached devices:"
     adb devices
 }
+
+# oh my posh theme
+eval "$(oh-my-posh init bash --config ~/.config/ohmyposh/dracula.omp.json)"

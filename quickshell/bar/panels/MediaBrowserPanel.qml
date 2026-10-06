@@ -103,15 +103,18 @@ PanelWindow {
     function buildScanCmd() {
         if (isVideos) {
             return ["bash", "-c",
-                "D=\"${OMARCHY_SCREENRECORD_DIR:-${XDG_VIDEOS_DIR:-$(xdg-user-dir VIDEOS 2>/dev/null)}}\"; case \"$D\" in \"\"|\"$HOME\") D=\"$HOME/Videos\";; esac; " +
-                "find \"$D\" -maxdepth 1 -type f " +
+                "D=\"${OMARCHY_SCREENRECORD_DIR:-${XDG_VIDEOS_DIR:-$HOME/Videos}}\"; case \"$D\" in \"\"|\"$HOME\") D=\"$HOME/Videos\";; esac; " +
+                "dirs=(); [ -d \"$D/Screencasts\" ] && dirs+=(\"$D/Screencasts\"); [ -d \"$D\" ] && dirs+=(\"$D\"); " +
+                "find \"${dirs[@]}\" -maxdepth 1 -type f " +
                 "\\( -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' -o -iname '*.mov' -o -iname '*.avi' -o -iname '*.m4v' \\) " +
                 "-printf '%T@\\t%p\\n' 2>/dev/null | sort -rn | head -100 | cut -f2- | " +
                 "while IFS= read -r f; do b=$(basename \"$f\"); printf '%s\\t%s/%s.jpg\\n' \"$f\" \"$HOME/.cache/quickshell-media-thumbs\" \"${b%.*}\"; done"]
         } else {
             return ["bash", "-c",
-                "D=\"${OMARCHY_SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$(xdg-user-dir PICTURES 2>/dev/null)}}\"; case \"$D\" in \"\"|\"$HOME\") D=\"$HOME/Pictures\";; esac; " +
-                "find \"$D\" -maxdepth 1 -type f -iname 'screenshot-*.png' " +
+                "D=\"${OMARCHY_SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}}\"; case \"$D\" in \"\"|\"$HOME\") D=\"$HOME/Pictures\";; esac; " +
+                "dirs=(); [ -d \"$D/Screenshots\" ] && dirs+=(\"$D/Screenshots\"); [ -d \"$D\" ] && dirs+=(\"$D\"); " +
+                "find \"${dirs[@]}\" -maxdepth 1 -type f " +
+                "\\( -iname 'screenshot-*' -o -iname 'shot_*' -o -iname 'shot-*' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \\) " +
                 "-printf '%T@\\t%p\\n' 2>/dev/null | sort -rn | head -100 | cut -f2- | " +
                 "while IFS= read -r f; do k=$(printf '%s' \"$f\" | md5sum | cut -d' ' -f1); m=$(stat -c %Y \"$f\" 2>/dev/null); printf '%s\\t%s/%s-%s.jpg\\n' \"$f\" \"$HOME/.cache/quickshell-img-thumbs\" \"$k\" \"$m\"; done"]
         }
@@ -242,6 +245,7 @@ PanelWindow {
     }
 
     Process { id: copyProc; command: [] }
+    Process { id: gyotakuProc; command: ["bash", "-c", "$HOME/.local/bin/gyotaku-toggle"] }
     function copyFocused() {
         if (!sel || !sel.filePath) return
         copyProc.command = panel.isVideos
@@ -254,7 +258,10 @@ PanelWindow {
     function mediaLabel(path) {
         var n = String(path || "").split("/").pop().replace(/\.[^.]+$/, "")
         var m = n.match(/(\d{4})-(\d{2})-(\d{2})[_-](\d{2})-(\d{2})-(\d{2})/)
-        return m ? (m[1] + "-" + m[2] + "-" + m[3] + "  " + m[4] + ":" + m[5]) : n
+        if (m) return m[1] + "-" + m[2] + "-" + m[3] + "  " + m[4] + ":" + m[5]
+        var s = n.match(/^shot_(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})$/)
+        if (s) return "20" + s[6] + "-" + s[5] + "-" + s[4] + "  " + s[1] + ":" + s[2]
+        return n
     }
 
     // ── geometry ──
@@ -386,6 +393,11 @@ PanelWindow {
                 event.accepted = true
             } else if (event.key === Qt.Key_C && (event.modifiers & Qt.ControlModifier)) {
                 panel.copyFocused(); event.accepted = true
+            } else if (event.key === Qt.Key_F && (event.modifiers & Qt.ControlModifier)) {
+                root.mediaBrowserVisible = false
+                gyotakuProc.running = false
+                gyotakuProc.running = true
+                event.accepted = true
             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 panel.openSelected(); event.accepted = true
             } else if (event.key === Qt.Key_Backspace) {
@@ -552,7 +564,7 @@ PanelWindow {
         Text {
             visible: !panel.confirmDelete
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "← →  scroll navigate     Enter open     Del delete     Ctrl+C copy     Esc"
+            text: "← →  scroll navigate     Enter open     Ctrl+F OCR search (Gyotaku)     Del delete     Ctrl+C copy     Esc"
             color: panel.uiDim
             font.family: root.mono; font.pixelSize: 11
             horizontalAlignment: Text.AlignHCenter

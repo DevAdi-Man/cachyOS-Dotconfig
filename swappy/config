@@ -1,5 +1,5 @@
 [Default]
-save_dir=__USER_HOME__/Pictures/Screenshots
+save_dir=/home/devadi/Pictures/Screenshots
 save_filename_format=shot_%H%M%S_%d%m%y.png
 show_panel=true
 line_size=5

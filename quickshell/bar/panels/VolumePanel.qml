@@ -26,6 +26,35 @@ PanelWindow {
     property real   micLevel: 0
     property bool   notifyMicStateAfterRefresh: false
     property bool   micStateRefreshPending: false
+    property bool   isDraggingOutput: false
+    property int    dragOutputVolume: audio.volume
+    readonly property int displayVolume: isDraggingOutput ? dragOutputVolume : volPanel.volume
+
+    onVolumeChanged: {
+        if (!isDraggingOutput) dragOutputVolume = volume
+    }
+
+    property int _targetOutputVolume: -1
+    function applyOutputVolume(vol, unmute) {
+        var v = Math.max(0, Math.min(100, Math.round(vol)))
+        volPanel._targetOutputVolume = v
+        if (!outVolProc.running) {
+            volPanel._runOutputVolumeCommand(unmute)
+        }
+    }
+
+    function _runOutputVolumeCommand(unmute) {
+        if (volPanel._targetOutputVolume < 0) return
+        var v = volPanel._targetOutputVolume
+        volPanel._targetOutputVolume = -1
+        var cmd = ""
+        if (unmute && volPanel.muted) {
+            cmd += "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 2>/dev/null || pamixer -u 2>/dev/null || true; "
+        }
+        cmd += "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ " + v + "% 2>/dev/null || pamixer --set-volume " + v + " 2>/dev/null || pactl set-sink-volume @DEFAULT_SINK@ " + v + "% 2>/dev/null || true"
+        outVolProc.command = ["bash", "-c", cmd]
+        outVolProc.running = true
+    }
     readonly property real micNoiseFloorDb: -55
     readonly property bool micMeterAvailable: micPeakLoader.status === Loader.Ready
         && micPeakLoader.item !== null
@@ -230,26 +259,70 @@ PanelWindow {
             }
 
             Item {
+                id: outTrackItem
                 width: parent.width
                 height: 30
+
                 UiText {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    text: volPanel.muted ? "Muted" : volPanel.volume + "%"
-                    color: volPanel.muted
+                    text: (volPanel.muted && !volPanel.isDraggingOutput) ? "Muted" : volPanel.displayVolume + "%"
+                    color: (volPanel.muted && !volPanel.isDraggingOutput)
                         ? Qt.rgba(root.seal.r, root.seal.g, root.seal.b, 0.4)
                         : root.seal
                     font.family: root.mono; font.pixelSize: 11; font.weight: Font.Medium
                 }
+
                 Rectangle {
+                    id: outTrack
                     anchors.bottom: parent.bottom
                     width: parent.width; height: 8; radius: 4
                     color: root.fillActive
+
                     Rectangle {
-                        width: parent.width * (volPanel.muted ? 0 : Math.min(volPanel.volume / 100, 1))
+                        width: parent.width * ((volPanel.muted && !volPanel.isDraggingOutput) ? 0 : Math.min(volPanel.displayVolume / 100, 1))
                         height: parent.height; radius: 4
-                        color: root.seal
-                        Behavior on width { NumberAnimation { duration: 300 } }
+                        color: (volPanel.muted && !volPanel.isDraggingOutput) ? Qt.rgba(root.seal.r, root.seal.g, root.seal.b, 0.4) : root.seal
+                        Behavior on width {
+                            enabled: !volPanel.isDraggingOutput
+                            NumberAnimation { duration: 150 }
+                        }
+                    }
+
+                    MouseArea {
+                        id: outTrackMa
+                        anchors.fill: parent
+                        anchors.topMargin: -18
+                        anchors.bottomMargin: -6
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+
+                        function setFromX(x) {
+                            var pct = Math.max(0, Math.min(100, Math.round(x / outTrack.width * 100)))
+                            volPanel.dragOutputVolume = pct
+                            volPanel.applyOutputVolume(pct, true)
+                        }
+
+                        onPressed: function(m) {
+                            volPanel.isDraggingOutput = true
+                            setFromX(m.x)
+                        }
+                        onPositionChanged: function(m) {
+                            if (pressed) setFromX(m.x)
+                        }
+                        onReleased: function(m) {
+                            setFromX(m.x)
+                            volPanel.isDraggingOutput = false
+                        }
+                        onCanceled: {
+                            volPanel.isDraggingOutput = false
+                        }
+                        onWheel: function(e) {
+                            var delta = e.angleDelta.y > 0 ? 5 : -5
+                            var target = Math.max(0, Math.min(100, volPanel.displayVolume + delta))
+                            volPanel.dragOutputVolume = target
+                            volPanel.applyOutputVolume(target, true)
+                        }
                     }
                 }
             }
@@ -418,6 +491,11 @@ PanelWindow {
                                 onReleased: {
                                     volPanel.run("pactl set-sink-input-volume " + appRow.modelData.idx + " " + appRow.liveVol + "%")
                                 }
+                                onWheel: function(e) {
+                                    var delta = e.angleDelta.y > 0 ? 5 : -5
+                                    appRow.liveVol = Math.max(0, Math.min(100, appRow.liveVol + delta))
+                                    volPanel.run("pactl set-sink-input-volume " + appRow.modelData.idx + " " + appRow.liveVol + "%")
+                                }
                             }
                         }
                     }
@@ -553,7 +631,7 @@ PanelWindow {
             volPanel.refreshMicState(code === 0)
         }
     }
-    Process { id: audioRunner;   command: ["bash", "-c", "omarchy-launch-audio"] }
+    Process { id: audioRunner;   command: ["bash", "-c", "command -v pavucontrol >/dev/null 2>&1 && pavucontrol || command -v omarchy-launch-audio >/dev/null 2>&1 && omarchy-launch-audio || alsamixer"] }
     Process {
         id: actProc
         property bool refreshAfterExit: false
@@ -562,6 +640,15 @@ PanelWindow {
             if (refreshAfterExit) {
                 refreshAfterExit = false
                 volPanel.refreshAll()
+            }
+        }
+    }
+    Process {
+        id: outVolProc
+        command: []
+        onExited: {
+            if (volPanel._targetOutputVolume >= 0) {
+                volPanel._runOutputVolumeCommand(false)
             }
         }
     }
@@ -671,6 +758,10 @@ PanelWindow {
     }
 
     onVisibleChanged: {
-        if (visible) volPanel.refreshAll()
+        if (visible) {
+            volPanel.isDraggingOutput = false
+            volPanel.dragOutputVolume = volPanel.volume
+            volPanel.refreshAll()
+        }
     }
 }

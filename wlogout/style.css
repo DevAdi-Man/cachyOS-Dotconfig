@@ -61,25 +61,25 @@ button:active {
 /* ─── Individual Button Icons ─── */
 
 #lock {
-    background-image: image(url("__USER_HOME__/.config/wlogout/icons/padlock.png"));
+    background-image: image(url("/home/devadi/test_home/.config/wlogout/icons/padlock.png"));
 }
 
 #logout {
-    background-image: image(url("__USER_HOME__/.config/wlogout/icons/exit.png"));
+    background-image: image(url("/home/devadi/test_home/.config/wlogout/icons/exit.png"));
 }
 
 #suspend {
-    background-image: image(url("__USER_HOME__/.config/wlogout/icons/sleeping.png"));
+    background-image: image(url("/home/devadi/test_home/.config/wlogout/icons/sleeping.png"));
 }
 
 #hibernate {
-    background-image: image(url("__USER_HOME__/.config/wlogout/icons/hibernate.png"));
+    background-image: image(url("/home/devadi/test_home/.config/wlogout/icons/hibernate.png"));
 }
 
 #reboot {
-    background-image: image(url("__USER_HOME__/.config/wlogout/icons/reboot.png"));
+    background-image: image(url("/home/devadi/test_home/.config/wlogout/icons/reboot.png"));
 }
 
 #shutdown {
-    background-image: image(url("__USER_HOME__/.config/wlogout/icons/power.png"));
+    background-image: image(url("/home/devadi/test_home/.config/wlogout/icons/power.png"));
 }
