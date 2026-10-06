@@ -349,9 +349,11 @@ install_configs() {
                 printf "  ${DIM}• [.config]     %s -> %s/%s${RESET}\n" "$name" "$TARGET_CONFIG" "$name"
             else
                 if [[ -d "$item" ]]; then
+                    rm -rf "$TARGET_CONFIG/$name"
                     mkdir -p "$TARGET_CONFIG/$name"
                     cp -rT "$item" "$TARGET_CONFIG/$name"
                 else
+                    rm -f "$TARGET_CONFIG/$name"
                     cp -f "$item" "$TARGET_CONFIG/$name"
                 fi
             fi
