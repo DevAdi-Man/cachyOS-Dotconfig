@@ -80,5 +80,7 @@ function adb_wifi() {
     adb devices
 }
 
-# oh my posh theme
-eval "$(oh-my-posh init bash --config ~/.config/ohmyposh/dracula.omp.json)"
+# starship prompt
+if command -v starship >/dev/null 2>&1; then
+    eval "$(starship init bash)"
+fi
