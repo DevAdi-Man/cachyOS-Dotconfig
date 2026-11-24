@@ -35,7 +35,19 @@ return { -- Autocompletion
       -- cmp-nvim-lsp only registers its LSP source on InsertEnter,
       -- which requires setup() to be called explicitly.
       config = function()
-        require('cmp_nvim_lsp').setup()
+        local cmp_lsp = require('cmp_nvim_lsp')
+        cmp_lsp.setup()
+        vim.api.nvim_create_autocmd('LspAttach', {
+          group = vim.api.nvim_create_augroup('CmpLspAttach', { clear = true }),
+          callback = function(event)
+            -- Neovim records the buffer attachment after firing LspAttach.
+            vim.schedule(function()
+              if event.buf == vim.api.nvim_get_current_buf() and vim.api.nvim_get_mode().mode:sub(1, 1) == 'i' then
+                cmp_lsp._on_insert_enter()
+              end
+            end)
+          end,
+        })
       end,
     },
     'hrsh7th/cmp-buffer',

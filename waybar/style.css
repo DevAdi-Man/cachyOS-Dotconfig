@@ -1,5 +1,6 @@
 * {
-    font-family: "JetBrainsMono Nerd Font", "Symbols Nerd Font";
+    font-family: "Recursive", "Symbols Nerd Font", "JetBrainsMono Nerd Font";
+    font-variation-settings: "MONO" 0.52, "CASL" 0.71, "wght" 841, "slnt" -10.3, "CRSV" 0.5;
     font-size: 13px;
     min-height: 0;
 }

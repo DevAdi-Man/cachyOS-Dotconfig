@@ -125,6 +125,17 @@ vim.keymap.set('n', ']d', function()
 end, { desc = 'Go to next diagnostic message' })
 
 vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
+vim.keymap.set('n', '<leader>dy', function()
+  local float = vim.diagnostic.open_float { focus = false }
+  if not float then
+    vim.notify('No diagnostics on this line')
+    return
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(float, 0, -1, false)
+  vim.fn.setreg('+', table.concat(lines, '\n'))
+  vim.notify('Diagnostics copied to clipboard')
+end, { desc = 'Copy diagnostic popup to clipboard' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
 
 -- Reload/refresh current file from disk (like VS Code's Revert File)

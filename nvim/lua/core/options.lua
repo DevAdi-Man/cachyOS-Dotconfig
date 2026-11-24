@@ -20,6 +20,7 @@ vim.o.splitright = true -- Force all vertical splits to go to the right of curre
 vim.o.hlsearch = false -- Set highlight on search (default: true)
 vim.o.showmode = false -- We don't need to see things like -- INSERT -- anymore (default: true)
 vim.opt.termguicolors = true -- Set termguicolors to enable highlight groups (default: false)
+vim.o.guifont = "Recursive:h11" -- Default GUI font
 vim.o.whichwrap = "bs<>[]hl" -- Which "horizontal" keys are allowed to travel to prev/next line (default: 'b,s')
 vim.o.numberwidth = 4 -- Set number column width to 2 {default 4} (default: 4)
 vim.o.swapfile = false -- Creates a swapfile (default: true)
@@ -43,6 +44,14 @@ vim.opt.iskeyword:append("-") -- Hyphenated words recognized by searches (defaul
 vim.opt.formatoptions:remove({ "c", "r", "o" }) -- Don't insert the current comment leader automatically for auto-wrapping comments using 'textwidth', hitting <Enter> in insert mode, or hitting 'o' or 'O' in normal mode. (default: 'croql')
 vim.opt.runtimepath:remove("/usr/share/vim/vimfiles") -- Separate Vim plugins from Neovim in case Vim still in use (default: includes this path if Vim is installed)
 vim.opt.signcolumn = "yes"
+
+vim.diagnostic.config({
+  virtual_text = true,
+  signs = true,
+  underline = true,
+  update_in_insert = true,
+  severity_sort = true,
+})
 
 -- Strip trailing whitespace in git commit messages (prevents commitlint header-trim errors)
 vim.api.nvim_create_autocmd("FileType", {

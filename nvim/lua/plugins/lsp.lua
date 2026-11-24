@@ -1,3 +1,58 @@
+local function node_lsp_command(server_name, fallback, ...)
+	local args = { ... }
+	return function(dispatchers, config)
+		local server = vim.fn.executable(server_name) == 1 and server_name or fallback or server_name
+		if config.root_dir then
+			local project_server = vim.fs.joinpath(config.root_dir, "node_modules", ".bin", server_name)
+			if vim.fn.executable(project_server) == 1 then
+				server = project_server
+			end
+		end
+
+		local command = { server, unpack(args) }
+		if server == fallback then
+			table.insert(command, 1, "node")
+		end
+
+		-- The current Node runtime needs ordinary pipes for LSP stdin and stdout.
+		return vim.lsp.rpc.start({
+			"bash", "-c", [[exec "$@" < <(cat) > >(cat)]], server_name, unpack(command),
+		}, dispatchers)
+	end
+end
+
+local function bundled_vscode_server(extension, script)
+	local prefix = vim.fs.joinpath(vim.env.HOME, ".vscode", "extensions", extension .. "-")
+	local latest_version, latest_server
+	for _, dir in ipairs(vim.fn.glob(prefix .. "*", false, true)) do
+		local version = vim.version.parse(dir:sub(#prefix + 1))
+		local server = vim.fs.joinpath(dir, script)
+		if version and vim.fn.filereadable(server) == 1 and (not latest_version or version > latest_version) then
+			latest_version, latest_server = version, server
+		end
+	end
+	return latest_server
+end
+
+local function sql_lsp_command(dispatchers)
+	local server = vim.fn.exepath("sql-language-server")
+	local compatibility = vim.fs.joinpath(vim.fn.stdpath("config"), "lua", "config", "sql-compat.cjs")
+	return vim.lsp.rpc.start({
+		"bash", "-c", [[exec "$@" < <(cat) > >(cat)]], "sqlls",
+		"node", "--require", compatibility, server, "up", "--method", "stdio",
+	}, dispatchers)
+end
+
+local function rust_analyzer_available()
+	local analyzer = vim.uv.fs_realpath(vim.fn.exepath("rust-analyzer"))
+	if not analyzer then
+		return false
+	end
+	local rustup = vim.uv.fs_realpath(vim.fn.exepath("rustup"))
+	-- A rustup shim can be on PATH even when the toolchain has no analyzer.
+	return analyzer ~= rustup or vim.system({ "rustup", "which", "rust-analyzer" }):wait().code == 0
+end
+
 return {
 	"neovim/nvim-lspconfig",
 	dependencies = {
@@ -121,6 +176,7 @@ return {
 		-- So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
 		local capabilities = vim.lsp.protocol.make_client_capabilities()
 		capabilities = vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
+		vim.lsp.config("*", { capabilities = capabilities })
 
 		-- Enable the following language servers
 		--
@@ -129,8 +185,15 @@ return {
 		-- - filetypes (table): Override the default list of associated filetypes for the server
 		-- - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
 		-- - settings (table): Override the default settings passed when initializing the server.
+		local svelte_fallback =
+			bundled_vscode_server("svelte.svelte-vscode", "node_modules/svelte-language-server/bin/server.js")
+		local eslint_fallback = bundled_vscode_server("dbaeumer.vscode-eslint", "server/out/eslintServer.js")
 		local servers = {
-			ts_ls = {},
+			ts_ls = { cmd = node_lsp_command("typescript-language-server", nil, "--stdio") },
+			svelte = { cmd = node_lsp_command("svelteserver", svelte_fallback, "--stdio") },
+			eslint = { cmd = node_lsp_command("vscode-eslint-language-server", eslint_fallback, "--stdio") },
+			clangd = {},
+			rust_analyzer = {},
 			ruff = {},
 			pylsp = {
 				settings = {
@@ -150,9 +213,9 @@ return {
 			},
 			html = { filetypes = { "html", "twig", "hbs" } },
 			cssls = {},
-			tailwindcss = {},
+			tailwindcss = { cmd = node_lsp_command("tailwindcss-language-server", nil, "--stdio") },
 			dockerls = {},
-			sqlls = {},
+			sqlls = { cmd = sql_lsp_command },
 			terraformls = {},
 			jsonls = {},
 			yamlls = {},
@@ -180,24 +243,28 @@ return {
 		}
 
 		-- Ensure the servers and tools above are installed
-		local ensure_installed = vim.tbl_keys(servers or {})
+		local has_rust_analyzer = rust_analyzer_available()
+		local ensure_installed = vim.tbl_keys(servers)
+		ensure_installed = vim.tbl_filter(function(server)
+			return (server ~= "rust_analyzer" or not has_rust_analyzer)
+				and (server ~= "svelte" or not svelte_fallback)
+				and (server ~= "eslint" or not eslint_fallback)
+		end, ensure_installed)
 		vim.list_extend(ensure_installed, {
 			"stylua", -- Used to format Lua code
+			"kotlin-lsp",
 		})
 		require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
 		for server, cfg in pairs(servers) do
-			-- For each LSP server (cfg), we merge:
-			-- 1. A fresh empty table (to avoid mutating capabilities globally)
-			-- 2. Your capabilities object with Neovim + cmp features
-			-- 3. Any server-specific cfg.capabilities if defined in `servers`
-			cfg.capabilities = vim.tbl_deep_extend("force", {}, capabilities, cfg.capabilities or {})
-
 			vim.lsp.config(server, cfg)
-			vim.lsp.enable(server)
+			-- Mason will enable rust_analyzer after a successful installation.
+			if server ~= "rust_analyzer" or has_rust_analyzer then
+				vim.lsp.enable(server)
+			end
 		end
 
 		-- Kotlin / Android / Compose (KMP + CMP) LSP + Gradle runner setup
-		require("config.kotlin").setup()
+		require("config.kotlin").setup(capabilities)
 	end,
 }

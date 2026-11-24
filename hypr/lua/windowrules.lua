@@ -4,6 +4,13 @@
 
 local OPAQUE = "1.0 override 1.0 override"
 
+-- Ignore maximize requests from all apps (prevents apps from auto-maximizing and breaking tiling)
+hl.window_rule({
+	name = "suppress-maximize-events",
+	match = { class = ".*" },
+	suppress_event = "maximize",
+})
+
 -- ─── Floating by class ───────────────────────────────────────────────────────
 local float_classes = {
    { "^(floating-terminal)$",                        { 1200, 700 } },
@@ -28,6 +35,12 @@ end
 
 -- Thunar dialogs (non-main windows)
 hl.window_rule({ match = { class = "^(thunar)$", initial_title = "negative:" .. (os.getenv("USER") or "") .. " - Thunar" }, float = true, size = { 900, 600 } })
+
+-- ─── Transparent windows (Terminal only) ────────────────────────────────────
+hl.window_rule({
+   match = { class = "^(kitty|floating-terminal)$" },
+   opacity = "0.89 override 0.89 override",
+})
 
 -- ─── Opaque windows ──────────────────────────────────────────────────────────
 for _, class in ipairs({ "^(brave-browser)$", "^(google-chrome)$", "^(chromium)$", "^(firefox)$", "^(discord)$" }) do

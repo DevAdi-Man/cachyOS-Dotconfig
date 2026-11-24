@@ -1,7 +1,7 @@
 configuration {
     show-icons: true;
     icon-theme: "Papirus";
-    font: "JetBrainsMono Nerd Font 12";
+    font: "Recursive 12";
     display-window: "Windows";
 }
 

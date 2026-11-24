@@ -8,11 +8,11 @@ in vec2 v_texcoord;
 uniform sampler2D tex;
 out vec4 fragColor;
 
-const float cell = 4.0;      // dot pitch in px; 3-6 reads as newsprint
+const float cell = 4.0;
 const float levels = 5.0;
-const vec3 ink = vec3(0.804, 0.769, 0.729);   // #cdc4ba
+const float softness = 1.4;
+const vec3 ink = vec3(0.659, 0.549, 0.890);   // #A88CE3
 const vec3 paper = vec3(0.0);
-const float softness = 1.2;
 
 float luma(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
 

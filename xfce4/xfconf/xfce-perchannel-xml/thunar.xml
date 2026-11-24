@@ -7,5 +7,10 @@
   <property name="last-separator-position" type="int" value="170"/>
   <property name="last-renamer-dialog-maximized" type="bool" value="true"/>
   <property name="last-details-view-zoom-level" type="string" value="THUNAR_ZOOM_LEVEL_38_PERCENT"/>
-  <property name="last-details-view-column-widths" type="string" value="50,50,132,50,50,92,50,50,198,50,50,62,50,171"/>
+  <property name="last-details-view-column-widths" type="string" value="50,50,140,50,50,454,50,50,546,50,50,94,50,169"/>
+  <property name="last-sort-column" type="string" value="THUNAR_COLUMN_DATE_MODIFIED"/>
+  <property name="last-sort-order" type="string" value="GTK_SORT_ASCENDING"/>
+  <property name="misc-thumbnail-mode" type="string" value="THUNAR_THUMBNAIL_MODE_ALWAYS"/>
+  <property name="last-image-preview-visible" type="bool" value="true"/>
+  <property name="last-show-hidden" type="bool" value="true"/>
 </channel>

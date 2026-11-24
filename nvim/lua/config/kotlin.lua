@@ -1,130 +1,84 @@
--- Kotlin / Android / Compose (KMP + CMP) LSP setup
--- Called from lua/plugins/lsp.lua (inside the nvim-lspconfig config function)
+-- Kotlin language server and Gradle shortcuts.
 local M = {}
 
-function M.setup()
-	local data_dir = vim.fn.stdpath("data") -- ~/.local/share/nvim
-	-- Find installed intellij-server binary (kotlin-server-<ver>/bin/intellij-server)
-	local server_bin = vim.fn.glob(data_dir .. "/kotlin-server-*/bin/intellij-server", false, true)[1]
-	local lsp_root = data_dir .. "/kotlin-lsp"
+local gradle_build = { "build.gradle.kts", "build.gradle" }
+local gradle_settings = { "settings.gradle.kts", "settings.gradle" }
+local kotlin_roots = { gradle_settings, gradle_build, "pom.xml", "workspace.json" }
 
-	-- ── One-time installer ────────────────────────────────────────────
-	-- Run `:KotlinLspInstall` once. Downloads the official JetBrains
-	-- Kotlin LSP (kotlin-server) into `data_dir`. URL pattern taken from
-	-- the mason-registry `kotlin-lsp` package definition.
-	local function install_kotlin_lsp()
-		local ok, out = pcall(function()
-			return vim.fn.system({
-				"curl",
-				"-sL",
-				"https://api.github.com/repos/Kotlin/kotlin-lsp/releases/latest",
-			})
-		end)
-		if not ok or vim.v.shell_error ~= 0 then
-			vim.notify("KotlinLspInstall: failed to query GitHub releases", vim.log.levels.ERROR)
-			return
-		end
-		local tag = out:match('"tag_name"%s*:%s*"kotlin%-lsp/v([^"]+)"') or out:match('"tag_name"%s*:%s*"([^"]+)"')
-		if not tag then
-			vim.notify("KotlinLspInstall: could not parse latest release tag", vim.log.levels.ERROR)
-			return
-		end
-		local url = string.format(
-			"https://download-cdn.jetbrains.com/language-server/kotlin-server/%s/kotlin-server-%s.tar.gz",
-			tag,
-			tag
-		)
-		local archive = lsp_root .. ".tar.gz"
-		vim.fn.mkdir(data_dir, "p")
-		vim.notify("KotlinLspInstall: downloading " .. url, vim.log.levels.INFO)
-		vim.fn.system({ "curl", "-sL", "-o", archive, url })
-		if vim.v.shell_error ~= 0 then
-			vim.notify("KotlinLspInstall: download failed: " .. url, vim.log.levels.ERROR)
-			return
-		end
-		vim.fn.system({ "tar", "-xzf", archive, "-C", data_dir })
-		os.remove(archive)
-		local bin = data_dir .. "/kotlin-server-" .. tag .. "/bin/intellij-server"
-		if vim.fn.filereadable(bin) == 1 then
-			os.execute("chmod +x " .. bin)
-			-- store version for reference
-			local fh = io.open(lsp_root .. "/VERSION", "w")
-			if fh then
-				fh:write(tag)
-				fh:close()
-			end
-			vim.notify("Kotlin LSP installed: " .. bin .. " (restart nvim)", vim.log.levels.INFO)
-		else
-			vim.notify("KotlinLspInstall: intellij-server not found after extract", vim.log.levels.ERROR)
-		end
-	end
-
-	vim.api.nvim_create_user_command("KotlinLspInstall", install_kotlin_lsp, {})
-
-	-- ── Server command resolution ─────────────────────────────────────
-	local cmd
-	if vim.fn.filereadable(server_bin) == 1 then
-		-- Official JetBrains Kotlin LSP (intellij-server)
-		cmd = { server_bin, "--stdio" }
-	else
-		-- Fallback to mason's intellij-server / kotlin-lsp if installed there
-		local mason_bin = vim.fn.stdpath("data") .. "/mason/bin/intellij-server"
-		local mason_kls = vim.fn.stdpath("data") .. "/mason/bin/kotlin-lsp"
-		if vim.fn.filereadable(mason_bin) == 1 then
-			cmd = { mason_bin, "--stdio" }
-		elseif vim.fn.filereadable(mason_kls) == 1 then
-			cmd = { mason_kls, "--stdio" }
-		end
-	end
-
-	if not cmd then
-		vim.notify_once(
-			"Kotlin LSP not found. Run :KotlinLspInstall (or :MasonInstall kotlin-lsp).",
-			vim.log.levels.WARN
-		)
+local function multiplatform_root(bufnr)
+	local module = vim.fs.root(bufnr, gradle_build)
+	if not module then
 		return
 	end
 
-	local capabilities = vim.tbl_deep_extend(
-		"force",
-		vim.lsp.protocol.make_client_capabilities(),
-		require("cmp_nvim_lsp").default_capabilities()
-	)
+	local common = vim.uv.fs_stat(vim.fs.joinpath(module, "src", "commonMain"))
+	local is_multiplatform = common and common.type == "directory"
+	for _, name in ipairs(gradle_build) do
+		local path = vim.fs.joinpath(module, name)
+		if not is_multiplatform and vim.fn.filereadable(path) == 1 then
+			local build = table.concat(vim.fn.readfile(path), "\n")
+			is_multiplatform = build:find("org.jetbrains.kotlin.multiplatform", 1, true)
+				or build:match([[kotlin%s*%(%s*["']multiplatform["']%s*%)]])
+		end
+	end
+	if is_multiplatform then
+		return vim.fs.root(bufnr, gradle_settings) or module
+	end
+end
 
-	-- LSP attach keymaps (same conventions as the rest of this config)
-	vim.api.nvim_create_autocmd("LspAttach", {
-		group = vim.api.nvim_create_augroup("kotlin-lsp-attach", { clear = true }),
-		callback = function(event)
-			local map = function(keys, func, desc)
-				vim.keymap.set("n", keys, func, { buffer = event.buf, desc = "Kotlin LSP: " .. desc })
-			end
-			map("gd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
-			map("gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
-			map("gI", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
-			map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
-			map("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction")
-			map("K", vim.lsp.buf.hover, "Hover Documentation")
-		end,
-	})
+function M.setup(capabilities)
+	vim.api.nvim_create_user_command("KotlinLspInstall", function()
+		vim.cmd.MasonInstall("kotlin-lsp")
+	end, { desc = "Install JetBrains Kotlin LSP with Mason, then restart Neovim" })
 
-	vim.lsp.config("kotlin_lsp", {
-		cmd = cmd,
-		filetypes = { "kotlin" },
-		root_markers = { "settings.gradle", "settings.gradle.kts", "build.gradle", "build.gradle.kts" },
-		capabilities = capabilities,
-		settings = {
-			kotlin = {
-				inlayHints = { typeHints = true, parameterHints = true, chainedFunctionHints = true },
+	local has_kmp = vim.fn.executable("kmp-lsp") == 1
+	local function kotlin_root(bufnr, on_dir)
+		if not has_kmp or not multiplatform_root(bufnr) then
+			on_dir(vim.fs.root(bufnr, kotlin_roots))
+		end
+	end
+	if has_kmp then
+		vim.lsp.config("kmp_lsp", {
+			filetypes = { "kotlin" },
+			root_dir = function(bufnr, on_dir)
+				local root = multiplatform_root(bufnr)
+				if root then
+					on_dir(root)
+				end
+			end,
+		})
+		vim.lsp.enable("kmp_lsp")
+	end
+
+	-- Mason's kotlin-lsp package exposes the JetBrains launcher as intellij-server.
+	if vim.fn.executable("intellij-server") == 1 then
+		vim.lsp.config("kotlin_lsp", {
+			capabilities = capabilities,
+			root_dir = kotlin_root,
+			settings = {
+				kotlin = {
+					inlayHints = { typeHints = true, parameterHints = true, chainedFunctionHints = true },
+				},
 			},
-		},
-	})
-	vim.lsp.enable("kotlin_lsp")
+		})
+		vim.lsp.enable("kotlin_lsp")
+	elseif vim.fn.executable("kotlin-language-server") == 1 then
+		-- Use the installed server until the JetBrains server is available.
+		vim.lsp.config("kotlin_language_server", { capabilities = capabilities, root_dir = kotlin_root })
+		vim.lsp.enable("kotlin_language_server")
+	end
 
 	-- ── Gradle runner (KMP/CMP friendly) — bottom terminal split ─────
-	local function run_gradle(term_cmd)
-		local t = require("toggleterm").new({
+	local function run_gradle(bufnr, term_cmd)
+		local root = vim.fs.root(bufnr, "gradlew")
+		if not root then
+			vim.notify("Gradle wrapper not found for this buffer", vim.log.levels.WARN)
+			return
+		end
+
+		local t = require("toggleterm.terminal").Terminal:new({
 			cmd = term_cmd,
-			dir = "git",
+			dir = root,
 			direction = "horizontal",
 			size = 15,
 			close_on_exit = false,
@@ -139,7 +93,7 @@ function M.setup()
 			local opts = { buffer = event.buf }
 			local gk = function(keys, cmd_str, desc)
 				vim.keymap.set("n", keys, function()
-					run_gradle(cmd_str)
+					run_gradle(event.buf, cmd_str)
 				end, vim.tbl_extend("force", opts, { desc = desc }))
 			end
 			gk("<leader>gb", "./gradlew :composeApp:assembleDebug", "Gradle: [B]uild debug (composeApp)")

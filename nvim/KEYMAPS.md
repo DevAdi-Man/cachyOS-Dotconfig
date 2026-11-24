@@ -199,6 +199,7 @@
 | `[d`        | Previous diagnostic    | Pichli error/warning pe jao     |
 | `]d`        | Next diagnostic        | Agli error/warning pe jao       |
 | `<leader>d` | Open diagnostic float  | Error ka popup dikhao           |
+| `<leader>dy` | Copy diagnostic popup | Poora popup clipboard mein copy karo |
 | `<leader>q` | Diagnostics to loclist | Saari errors loclist mein daalo |
 
 ---
@@ -685,3 +686,15 @@
 | `<C-y>`      | Scroll up (cursor stays)   | Screen upar scroll karo, cursor nahi hila          |
 | `gv`         | Reselect last visual       | Last visual selection dobara select karo           |
 | `o` (visual) | Other end of selection     | Selection ke doosre end pe jao                     |
+
+---
+
+## 🦀 Rust (`rust.vim`)
+
+| Key / Command | Action                     | Kya karta hai                                      |
+| ------------- | -------------------------- | -------------------------------------------------- |
+| `:w` (Save)   | Auto-format on save        | File save karte hi `rustfmt` se auto-format hoga   |
+| `:RustFmt`    | Format Rust code           | Current file ko `rustfmt` se manually format karo  |
+| `<leader>rt`  | Run test under cursor      | Cargo test jo cursor ke neeche hai usko run karo   |
+| `:RustTest`   | Run test under cursor      | Command line se cursor wala test run karo          |
+| `:RustPlay`   | Send to Rust Playpen       | Selection ya buffer ko play.rust-lang.org pe bhejo |

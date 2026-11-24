@@ -30,10 +30,10 @@ export LANG=en_IN.UTF-8
 export LC_ALL=en_IN.UTF-8
 
 # Android Emulator
-alias emulator='QT_QPA_PLATFORM=xcb /home/devadi/Android/Sdk/emulator/emulator -avd Pixel_8 -gpu host -scale 0.4 -no-boot-anim -no-skin'
+alias emulator='QT_QPA_PLATFORM=xcb "$ANDROID_HOME/emulator/emulator" -avd Pixel_8 -gpu host -scale 0.4 -no-boot-anim -no-skin'
 
 # Added by Antigravity CLI installer
-export PATH="/home/devadi/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
 # Enable zoxide for cd
 if command -v zoxide >/dev/null 2>&1; then
@@ -80,7 +80,31 @@ function adb_wifi() {
     adb devices
 }
 
-# starship prompt
-if command -v starship >/dev/null 2>&1; then
-    eval "$(starship init bash)"
+# oh my posh theme
+if command -v oh-my-posh >/dev/null 2>&1; then
+    eval "$(oh-my-posh init bash --config "$HOME/.config/ohmyposh/dracula.omp.json")"
 fi
+
+
+# --- Added by Agent for Tool Configurations ---
+
+# fzf integration
+if command -v fzf >/dev/null 2>&1; then
+    eval "$(fzf --bash)"
+    export FZF_DEFAULT_COMMAND='rg --files --hidden --glob "!.git"'
+    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+
+# atuin integration
+if command -v atuin >/dev/null 2>&1; then
+    eval "$(atuin init bash)"
+fi
+
+# lazygit alias
+alias lg='lazygit'
+
+# ----------------------------------------------
+
+# Rive CLI
+export PATH="$HOME/.rive/bin:$PATH"
+[[ ! -r "$HOME/.cargo/env" ]] || . "$HOME/.cargo/env"

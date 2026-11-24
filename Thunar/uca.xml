@@ -12,4 +12,19 @@
 	<startup-notify/>
 	<directories/>
 </action>
+
+<action>
+	<icon>document-send</icon>
+	<name>Send to V2059 (TwinDesk)</name>
+	<unique-id>twindesk-send-files</unique-id>
+	<command>__USER_HOME__/.local/bin/TwinDesk-2.0.1-x86_64.AppImage --send-files %F</command>
+	<description>Send the selected files with TwinDesk</description>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
 </actions>

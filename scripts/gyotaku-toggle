@@ -1,0 +1,17 @@
+#!/bin/bash
+# Gyotaku On-Demand Toggle & Launcher
+# Ensures gyotaku only runs when needed, consuming zero background RAM/CPU.
+
+if hyprctl layers 2>/dev/null | grep -q 'namespace: gyotaku'; then
+    # Window is currently open on screen — close it and release memory
+    pkill -x gyotaku-app 2>/dev/null
+else
+    # Terminate any stale/hidden instance first
+    pkill -x gyotaku-app 2>/dev/null
+
+    # Fast index of any new screenshots in background (takes ~0.1s)
+    "$HOME/.local/bin/gyotaku" index >/dev/null 2>&1 &
+
+    # Launch the search UI
+    exec "$HOME/.local/bin/gyotaku-app"
+fi

@@ -6,4 +6,8 @@
 
 
 # Added by Antigravity CLI installer
-export PATH="/home/devadi/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+
+# Added by swiftly
+[[ ! -r "$HOME/.local/share/swiftly/env.sh" ]] || . "$HOME/.local/share/swiftly/env.sh"
+[[ ! -r "$HOME/.cargo/env" ]] || . "$HOME/.cargo/env"

@@ -13,16 +13,16 @@ hl.on("hyprland.start", function()
    )
 
    -- ─── System services ─────────────────────────────────────────────────────
-   hl.exec_cmd("/usr/lib/gsd-xsettings")
+   hl.exec_cmd("test ! -x /usr/lib/gsd-xsettings || /usr/lib/gsd-xsettings")
    hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
 
    -- ─── Bar & notifications ─────────────────────────────────────────────────
-   hl.exec_cmd("bash -c 'export PATH=\"$HOME/.local/bin:$PATH\"; $HOME/.config/quickshell/bin/qs-barctl start'")
+   hl.exec_cmd("bash -c 'export PATH=\"$HOME/.local/bin:$PATH\"; \"$HOME/.config/quickshell/bin/qs-barctl\" start'")
    hl.exec_cmd("swaync")
    hl.exec_cmd("swayosd-server")
 
    -- ─── Wallpaper & idle ────────────────────────────────────────────────────
-   hl.exec_cmd("swaybg -m fill -i $(readlink -f ~/.config/omarchy/current/background)")
+   hl.exec_cmd("swaybg -m fill -i \"$HOME/.config/omarchy/current/background\"")
    hl.exec_cmd("sleep 5 && hypridle")
 
    -- ─── Clipboard ───────────────────────────────────────────────────────────

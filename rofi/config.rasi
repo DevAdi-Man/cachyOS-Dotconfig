@@ -5,7 +5,7 @@ configuration {
     display-drun: "Apps";
     display-run: "Run";
     display-window: "Windows";
-    font: "JetBrainsMono Nerd Font 12";
+    font: "Recursive 12";
 }
 
 * {

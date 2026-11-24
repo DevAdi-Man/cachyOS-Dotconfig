@@ -25,3 +25,13 @@ copyq_tab_*.dat
 copyq.lock
 .copyq_s
 copyq.pub
+
+# Local application state
+/gtk-3.0/bookmarks
+/obs-studio/logs/
+/obs-studio/profiler_data/
+/obs-studio/plugin_config/obs-websocket/
+/omarchy/current/background
+/omarchy/current/theme/backgrounds/
+/systemd/user/*.wants/
+/systemd/user/rclone-gdrive.service

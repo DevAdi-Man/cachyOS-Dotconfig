@@ -20,7 +20,7 @@ Rectangle {
 	Image {
 		id: wallpaper
 		anchors.fill: parent
-		source: "/home/devadi/Pictures/wallpapers/wallhaven-9orlxx.jpg"
+		source: "__USER_HOME__/Pictures/wallpapers/wallhaven-9orlxx.jpg"
 		fillMode: Image.PreserveAspectCrop
 		visible: false
 	}

@@ -45,6 +45,15 @@ return {
     -- High-performance color highlighter
     'norcalli/nvim-colorizer.lua',
     config = function()
+      -- Update the installed colorizer's Ex command adapter for Neovim 0.12.
+      getmetatable(require('colorizer/nvim').ex).__index = function(ex, key)
+        local command = key:gsub('_$', '!')
+        local run = function(...)
+          vim.cmd(table.concat(vim.iter({ command, ... }):flatten(math.huge):totable(), ' '))
+        end
+        rawset(ex, key, run)
+        return run
+      end
       require('colorizer').setup()
     end,
   },

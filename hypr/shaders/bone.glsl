@@ -9,7 +9,7 @@ in vec2 v_texcoord;
 uniform sampler2D tex;
 out vec4 fragColor;
 
-const vec3 ink = vec3(0.804, 0.769, 0.729);   // #cdc4ba
+const vec3 ink = vec3(0.659, 0.549, 0.890);   // #A88CE3
 const float lift = 0.85;   // <1 opens the shadows; text on dark chrome needs it
 
 float luma(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }

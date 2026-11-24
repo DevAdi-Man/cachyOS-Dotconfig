@@ -9,7 +9,7 @@ in vec2 v_texcoord;
 uniform sampler2D tex;
 out vec4 fragColor;
 
-const vec3 ink = vec3(0.804, 0.769, 0.729);   // #cdc4ba
+const vec3 ink = vec3(0.659, 0.549, 0.890);   // #A88CE3
 
 float bayer4(vec2 pos) {
     vec2 f = floor(mod(pos, 4.0));
